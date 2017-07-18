@@ -339,6 +339,7 @@ hr.small {
   font-size: 13px;
   font-style: normal;
   color: #a3a3a3;
+  margin-top: 5px;
 }
 .post-content-preview:hover {
   color: #46A5ED;
@@ -523,4 +524,3 @@ body {
 .navbar-default .navbar-toggle:active {
   background-color: #ddd;
 }
-
