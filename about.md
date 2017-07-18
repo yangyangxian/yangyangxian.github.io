@@ -1,16 +1,22 @@
 ---
 layout: page
-title: "关于"
-description: "Here lies one whose name is written on Coke"
+title: "ABOUT"
+description: "Here lies one whose name is written in 胡辣汤"
 header-img: "img/green.jpg"
 ---
-
+## 大事记
+- 1988.07.27 建号
+- 2006.06.08 高考完包夜 于西安市第六中学旁G时代网吧
+- 2010.06 度过了热泪盈眶的本科 于西安电子科技大学
+- 2013.03 貌似做了两年多学术 于西安电子科技大学
+- 2013.04.15 Coder 于施耐德电气
+- 2017.06.19 Keep Coding
 
 ### 坚信
 
-- 人要走出地球
-- 人要永生
-- 人终将告别婚姻
+- 走出地球
+- 永生
+- 告别婚姻
 
 ### 联系
 
