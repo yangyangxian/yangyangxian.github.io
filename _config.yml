@@ -8,7 +8,7 @@ url: "http://cnfeat"
 
 # About/contact
 owner:
-  name: " yang"
+  name: " Yang"
   email: persistence@vip.qq.com
   bio: "写就是写的报酬"
 
@@ -43,7 +43,7 @@ defaults:
       type: "posts"
     values:
       layout: "post"
-      author: "CnFeat"
+      author: "Yang"
       header-img: "img/green.jpg" # We don't want posts without a header image, that whould mean white on white
 
 # Comments
