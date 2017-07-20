@@ -74,6 +74,9 @@ hr.small {
     width: 500px;
   }
 }
+.post-container {
+  margin: 5px;
+}
 .post-container a {
   color: #2B4180;
 }
