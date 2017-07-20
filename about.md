@@ -16,7 +16,6 @@ header-img: "img/green.jpg"
 
 - 走出地球
 - 永生
-- 告别婚姻
 
 ### 联系
 
