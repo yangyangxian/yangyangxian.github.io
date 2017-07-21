@@ -1,19 +1,11 @@
 ---
 layout: page
-title: "Tags"
-description: "哈哈，你找到了我的文章基因库"  
+title: "Catogory"
+description: "分类"
 header-img: "img/semantic.jpg"  
 ---
 
-## 本页使用方法
-
-1. 在下面选一个你喜欢的词
-2. 点击它
-3. 相关的文章会「唰」地一声跳到页面顶端
-4. 马上试试？
-
 ## 分类列表
-
 
 <div id='tag_cloud'>
 {% for tag in site.tags %}
@@ -23,7 +15,7 @@ header-img: "img/semantic.jpg"
 
 <ul class="listing">
 {% for tag in site.tags %}
-  <li class="listing-seperator" id="{{ tag[0] }}">{{ tag[0] }}</li>
+  <h3 class="listing-seperator" id="{{ tag[0] }}">{{ tag[0] }}</h3>
 {% for post in tag[1] %}
   <li class="listing-item">
   <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
