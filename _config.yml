@@ -1,10 +1,10 @@
 # Site settings
 title: 读史阅世
-header-img: "img/green.jpg"
+header-img: "img/semantic.jpg"
 tagline: "cn"
 description: "杨洋|Here lies one whose name is written on coke"
 baseurl: ""
-url: "http://cnfeat"
+url: "http://yangyangxian.github.io"
 
 # About/contact
 owner:
