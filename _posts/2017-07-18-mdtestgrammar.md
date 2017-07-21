@@ -34,3 +34,5 @@ this is how to put a horizontal rule
 ***
 
 ![could not find picture](https://github.com/jy03147937/Notes/blob/master/test.jpg?raw=true)
+
+this is how to `highlight` a word
