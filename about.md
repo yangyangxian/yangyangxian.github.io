@@ -4,19 +4,11 @@ title: "ABOUT"
 description: "Here lies one whose name is written in 胡辣汤"
 header-img: "img/green.jpg"
 ---
-## 大事记
-- 1988.07.27 建号
-- 2006.06.08 高考完包夜 于西安市第六中学旁G时代网吧
-- 2010.06    热泪盈眶的本科 于西安电子科技大学
-- 2013.03    假装在学术界 于西安电子科技大学
-- 2013.04.15 成为Coder 于施耐德电气
-- 2017.06.19 Keep Coding
+## 简介
+大学读过物理，生物，做过科研，现为web开发程序员。   
+曾喜欢读历史，政治；现偶尔玩摄影，踢足球，常玩电子游戏。
 
-### 坚信
-- 走出地球
-- 永生
-
-### 联系
-
+## 联系
 - [微博@杨洋的围脖啊](http://weibo.com/2003457565)
 - [知乎@杨洋](http://www.zhihu.com/people/yang-yang-8)
+- [Steam@眉毛有点浓](http://steamcommunity.com/id/yangyoungyang/)
