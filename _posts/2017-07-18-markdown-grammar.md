@@ -1,3 +1,11 @@
+---
+layout: post
+title: 语法示例
+date: 2017-07-18
+categories: blog
+tags: [其他]
+description:
+---
 # This is the main title
 
 ### set
