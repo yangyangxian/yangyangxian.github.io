@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ABOUT"
+title: "关于我"
 description: "Here lies one whose name is written in 胡辣汤"
 header-img: "img/green.jpg"
 ---
