@@ -1,3 +1,10 @@
+<style>
+.tblsublvl {
+    padding-left: 18px;
+    border: 1px solid grey;
+}
+</style>
+
 ## 1.引言
 本文探讨两个问题：
 * 如何在一个存储过程中使用从另一个存储过程返回的结果集？换句话说，如何在一个SELECT语句中使用从一个存储过程得到的结果集？
@@ -15,18 +22,18 @@
   <nomeddle>OUTPUT参数</nomeddle>
 </a></td>
     <td>读取</td><td>是</td><td>&nbsp;</td>
-    <td>不通用，但有时被低估了。Not generally applicable, but sometimes overlooked.</td></tr>
+    <td>不通用，但有时被低估了。</td></tr>
 <tr class="tbltoplvl" style="border-bottom:none"><td><a href="#UDF">Table-valued Functions表值函数</a></td>
     <td rowspan="3">读取</td>
     <td rowspan="3">是</td>
     <td rowspan="3">&nbsp;</td>
     <td>通常是只读取数据时最好的方法，但有一些局限。</td></tr>
 <tr class="tblsublvl" style="padding-left:18pt;border:1px solid grey"><td>
-    <a href="#inlineUDF">Inline Functions</a></td>
-    <td>Use this to reuse a single <span class="keyword">SELECT</span>.</td></tr>
+    <a href="#inlineUDF">Inline Functions内嵌表值函数</a></td>
+    <td>用于重用<span class="keyword">SELECT</span>语句.</td></tr>
 <tr class="tblsublvl"><td>
-    <a href="#multiUDF"><span class="nowrap">Multi-statement Functions</span></a></td>
-    <td>When you need to encapsulate more complex
+    <a href="#multiUDF"><span class="nowrap">Multi-statement Functions多声明表值函数</span></a></td>
+    <td>用于更为复杂逻辑的SQL语句When you need to encapsulate more complex
     logic.</td></tr>
 <tr class="tbltoplvl"><td><a href="#usingtable">Using a Table</a></td>
     <td rowspan="3">In/Out</td>
@@ -72,3 +79,5 @@
     <td>SQL&nbsp;2016</td>
     <td>Not a general method, but useful to keep data globally available in a process.</td></tr>
 </tbody></table>
+
+
