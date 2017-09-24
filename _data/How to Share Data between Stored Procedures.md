@@ -77,4 +77,5 @@
 另一个相关的问题：如何从客户端代码给sp传入表数据，这个话题不在本文讨论范围之内，详见我的另一篇文章:[Using Table-Valued Parameters in SQL Server and .NET](http://www.sommarskog.se/arrays-in-sql-2008.html)。
 
 本文有关**作者，标题，销量**的示例表数据运行在旧版示例数据库pubs。你可以在这里下载脚本[Microsoft's web site](https://www.microsoft.com/en-us/download/details.aspx?displaylang=en&id=23654)。(有一些例子使用完全不存在的表，所以在pubs里无法运行)
+<span id="OUTPUT"><span>
 ## 2. OUTPUT参数
