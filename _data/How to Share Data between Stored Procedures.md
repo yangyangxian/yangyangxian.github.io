@@ -105,13 +105,13 @@ INSERT customers (cust_id, name, address, city)
    VALUES (@cust_id, @name, @address, @city)
 COMMIT TRANSACTION
 ```
-现在你可以直接在其他存储过程中调用`insert_customer`了。就是别忘了在调用的T-SQL语句的时候，指定一个OUTPUT类型的参数。
+现在你可以直接在其他存储过程中调用`insert_customer`了。别忘了给调用T-SQL语句指定一个OUTPUT类型的参数。
 ```
 EXEC insert_customer @name, @address, @city, @cust_id OUTPUT
 ```
-**注意：**上面的例子只有一个output参数，其实一个存储过程可以有多个output参数。
+**注意**：上面的例子只有一个output参数，其实一个存储过程可以有多个output参数。
 ## 3. Table-valued Functions表值函数
-当你想复用一个存储过程返回的结果集时，首先要做的事情是去研究一下是否能将存储过程重写为一个表值函数。经常情况是不能，因为SQL Server对函数中的限制非常多。如果能的话，重写为表值函数就是非常好的方法了。
+当你想复用一个存储过程返回的结果集时，首先要做的事情是去研究一下是否能将存储过程重写为一个表值函数。通常情况是不能，因为SQL Server对函数中的限制非常多。但如果能的话，那重写为表值函数就是最好的选择了。
 SQL Server有两种表函数：行内和多行函数(inline and multi-statement functions)。
 ### 3.1 Inline Functions行内函数
 以下是一个行内函数，摘自Books Online for SQL 2000。
