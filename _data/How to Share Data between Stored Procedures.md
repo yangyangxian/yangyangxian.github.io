@@ -79,3 +79,51 @@
 本文有关**作者，标题，销量**的示例表数据运行在旧版示例数据库pubs。你可以在这里下载脚本[Microsoft's web site](https://www.microsoft.com/en-us/download/details.aspx?displaylang=en&id=23654)。(有一些例子使用完全不存在的表，所以在pubs里无法运行)
 <span id="OUTPUT"><span>
 ## 2. OUTPUT参数
+这一方法仅适用于返回结果集只有一行的情况，虽然如此，这个方法也有时被人所遗忘。假如有以下存储过程:
+```
+CREATE PROCEDURE insert_customer @name    nvarchar(50),
+                                 @address nvarchar(50),
+                                 @city    nvarchar(50) AS
+DECLARE @cust_id int
+BEGIN TRANSACTION
+SELECT @cust_id = coalesce(MAX(cust_id), 0) + 1 FROM customers (UPDLOCK)
+INSERT customers (cust_id, name, address, city)
+   VALUES (@cust_id, @name, @address, @city)
+COMMIT TRANSACTION
+SELECT @cust_id
+```
+该存储过程往表中插入一条记录，并且返回这条记录的id。
+重写该存储过程如下：
+```
+CREATE PROCEDURE insert_customer @name    nvarchar(50),
+                                 @address nvarchar(50),
+                                 @city    nvarchar(50),
+                                 @cust_id int OUTPUT AS
+BEGIN TRANSACTION
+SELECT @cust_id = coalesce(MAX(cust_id), 0) + 1 FROM customers (UPDLOCK)
+INSERT customers (cust_id, name, address, city)
+   VALUES (@cust_id, @name, @address, @city)
+COMMIT TRANSACTION
+```
+现在你可以直接在其他存储过程中调用`insert_customer`了。就是别忘了在调用的T-SQL语句的时候，指定一个OUTPUT类型的参数。
+```
+EXEC insert_customer @name, @address, @city, @cust_id OUTPUT
+```
+**注意：**上面的例子只有一个output参数，其实一个存储过程可以有多个output参数。
+## 3. Table-valued Functions表值函数
+当你想复用一个存储过程返回的结果集时，首先要做的事情是去研究一下是否能将存储过程重写为一个表值函数。经常情况是不能，因为SQL Server对函数中的限制非常多。如果能的话，重写为表值函数就是非常好的方法了。
+SQL Server有两种表函数：行内和多行函数(inline and multi-statement functions)。
+### 3.1 Inline Functions行内函数
+以下是一个行内函数，摘自Books Online for SQL 2000。
+```
+CREATE FUNCTION SalesByStore (@storeid varchar(30))
+RETURNS TABLE AS
+RETURN (SELECT t.title, s.qty
+        FROM   sales s
+        JOIN   titles t ON t.title_id = s.title_id
+        WHERE  s.stor_id = @storeid)
+```
+使用它，非常简单：
+```
+SELECT * FROM SalesByStore('6380')
+```
