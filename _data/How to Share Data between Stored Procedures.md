@@ -112,6 +112,7 @@ EXEC insert_customer @name, @address, @city, @cust_id OUTPUT
 **注意**：上面的例子只有一个output参数，其实一个存储过程可以有多个output参数。
 ## 3. Table-valued Functions表值函数
 当你想复用一个存储过程返回的结果集时，首先要做的事情是去研究一下是否能将存储过程重写为一个表值函数。通常情况是不能，因为SQL Server对函数中的限制非常多。但如果能的话，那重写为表值函数就是最好的选择了。
+
 SQL Server有两种表函数：行内和多行函数(inline and multi-statement functions)。
 ### 3.1 Inline Functions行内函数
 以下是一个行内函数，摘自Books Online for SQL 2000。
@@ -127,3 +128,7 @@ RETURN (SELECT t.title, s.qty
 ```
 SELECT * FROM SalesByStore('6380')
 ```
+可以在语句中使用where条件过滤数据，也可以加上其他表写更为复杂的查询语句。也就是说，可以将行内函数看作是一个表或者视图。你可以将一个行内函数视为一个带有参数的视图，因为查询优化器（query optimizer）把行内函数当做一个宏命令，生成执行计划，就和你扩展查询语句时做的一样。所以，将一个SELECT语句封装进行内函数是没有性能损耗的。也因此，当你需要复用只用一条SELECT语句的存储过程的时候，最好的办法就是将存储过程重写为一个行内函数（或者将SELECT语句写到行内函数中，再把行内函数包在你的存储过程中，这样调用客户端就不受任何影响了）。
+
+有一些系统函数是没法写在用户定义函数（UDF）中的，比如newid()和rand()，SQL Server认为这么做会带来副作用。SQL 2000对此的限制更为严格的，行内函数里不能包含所有*非常量化*的函数。*非常量化*函数指对于同样的输入参数但是可能会得到不同的返回值的函数。一个典型的例子是getdate()。
+### 3.2 Multi-statement Functions
