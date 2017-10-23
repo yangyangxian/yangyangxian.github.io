@@ -186,3 +186,76 @@ CREATE PROCEDURE outer_sp AS
 go
 ```
 本例中，**outer\_sp**创建临时表，**inner\_sp**往临时表写入数据，这是临时表作为输出的应用场景。另一个场景是，**outer\_sp**往临时表写入数据，然后**inner\_sp**对数据进行一些通用的计算处理，调用者**outer\_sp**再使用处理过后的数据再进行其他操作。这一场景就是将临时表同时用作输入与输出。还有一种就是调用者在临时表中写入数据，被调用者对数据进行一系列业务逻辑验证，然后再对数据进行更新。这就是临时表作为输入时的场景。
+##### 改动现有代码
+假设你有如下存储过程:
+```
+CREATE PROCEDURE SalesByStore @storeid varchar(30) AS
+   SELECT t.title, s.qty
+   FROM   sales s
+   JOIN   titles t ON t.title_id = s.title_id
+   WHERE  s.stor_id = @storeid
+```
+你想要在另一个存储过程中复用该存储过程返回的结果集，但你只想要特定销量以上的那些书的标题，你该如何用临时表完成这个需求的同时不影响现有的其他客户端？解决办法是将这个存储过程放到一个子过程里，然后在子过程上再封装一层存储过程：
+```
+CREATE PROCEDURE SalesByStore_core @storeid varchar(30) AS
+   INSERT #SalesByStore (title, qty)
+      SELECT t.title, s.qty
+      FROM   sales s
+      JOIN   titles t ON t.title_id = s.title_id
+      WHERE  s.stor_id = @storeid
+go
+CREATE PROCEDURE SalesByStore @storeid varchar(30) AS
+   CREATE TABLE #SalesByStore(title varchar(80) NOT NULL PRIMARY KEY,
+                              qty   smallint    NOT NULL)
+   EXEC SalesByStore_core @storeid
+   SELECT * FROM #SalesByStore
+go
+CREATE PROCEDURE BigSalesByStore @storeid varchar(30),
+                                 @qty     smallint AS
+   CREATE TABLE #SalesByStore(title varchar(80) NOT NULL PRIMARY KEY,
+                              qty   smallint    NOT NULL)
+   EXEC SalesByStore_core @storeid
+   SELECT * FROM #SalesByStore WHERE qty >= @qty
+go
+EXEC SalesByStore '7131'
+EXEC BigSalesByStore '7131', 25
+go
+DROP PROCEDURE SalesByStore, BigSalesByStore, SalesByStore_core
+```
+**注意**：这段脚本完整地创建，测试并删除对象，在下文中还将用到这些存储过程脚本。
+与多声明表值函数的例子一样，我出于相同的目的，也给临时表加了主键。有些读者可能会有疑虑，从最佳实践的角度说，用SELECT *并不是一个好的做法。但我认为在同一个存储过程中创建的临时表身上用SELECT *是没有问题的，特别是当你需要获取临时表的所有列的时候。(当SELECT *的表对象是在别处定义的时候，情况就不一样了，因为你可能没法知道表在别处是否被改动了)
+
+解决方法非常明确，但是你可能会觉得在两个地方创建了临时表不太优雅，并且还多加了一个存储过程。那么下面这个稍显的方法能避免这些问题：
+```
+CREATE PROCEDURE SalesByStore_core @storeid       varchar(30),
+                                   @wantresultset bit = 0 AS
+   IF object_id('tempdb..#SalesByStore') IS  NULL 
+   BEGIN
+      CREATE TABLE #SalesByStore(title varchar(80) NOT NULL PRIMARY KEY,
+                                 qty   smallint    NOT NULL)
+   END
+
+   INSERT #SalesByStore (title, qty)
+      SELECT t.title, s.qty
+      FROM   sales s
+      JOIN   titles t ON t.title_id = s.title_id
+      WHERE  s.stor_id = @storeid
+      
+   IF @wantresultset = 1
+      SELECT * FROM #SalesByStore
+go
+CREATE PROCEDURE SalesByStore @storeid varchar(30) AS
+   EXEC SalesByStore_core @storeid, 1
+go
+```
+我将创建临时表从封装sp挪到了子过程，子过程检测临时表是否存在，不存在的话会创建临时表。外层sp中有一个EXEC语句，并给**@wantresultset**传参"1"去获取数据。如果不传此参数，则它默认为0，调用**BigSalesByStore**则不受新的逻辑的影响。（因此，这里仍存在两处CREATE TABLE语句）
+
+##### 代码复用的优点
+在我们继续之前，我想说明上面的例子并不是一个好的实践。共享临时表方法本身并不是个坏的方法，而是说你需要根据场景有选择性地使用这个方法。就比如上面这个例子，你可能也意识到了，我们又创建临时表，又是创建新的存储过程，却只为解决一个如此简单的问题，可谓是杀鸡用牛刀。共享临时表的方法在代码量比较大的时候，就是一个非常好的方法了。上面例子只是为了为讲清楚方法而简化了场景。
+要记住，与C#和JAVA之类的语言相比，Transact-SQL的代码复用特性非常简陋，所以我们在尝试复用代码的时候的方法显得异常繁琐。因此，在T‑SQL中进行代码复用要特别注意使用场景。代码复用依然是有它的优势，只不过在T‑SQL中并不像现代面向对象语言那么明显。在本文例子的简单问题中，最好的解法显然是给**SalesByStore**加上一个参数@qty。如果出于一些原因不能加参数，那么复制一个**BigSalesByStore**存储过程也比共享临时表更好一些。
+
+##### 性能影响
+你需要知道共享临时表存在两个性能方面的问题：一是它会产生相当数量的缓存垃圾，二是里层存储过程中与共享临时表相关的所有语句在每次执行时都会被重新编译。
+许多年来我已经成功让自己忽视了第一个问题，然而Alex Friedman却又让我重视起这一问题。在官方文档[Plan Caching in SQL Server 2008](https://technet.microsoft.com/en-us/library/ee343986)(虽然标题2008，但也适用后续版本)中是这么说的：
+> 如果一个存储过程使用了并不是由它静态地创建的临时表，那么spid(进程ID)会被存入缓存键。这意味着该存储过程的执行计划只会被在同一session中共享> 复用。如果临时表是由该存储过程静态创建的，那么则不会有这个问题。
+也就是说，如果两个sessions同时调用**outer\_sp**，那么他们各自在缓存中都有一个**inner\_sp**缓存项。假设你有一个繁忙的系统，有上千个sessions执行了**outer\_sp**，那么光这一个存储过程就有上千条缓存项。想象一下，如果你在10-20处都用了这个方法，那么系统中的缓存项高达20000。这是一个相当大的数量。
