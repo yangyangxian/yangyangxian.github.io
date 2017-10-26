@@ -167,7 +167,7 @@ END
 ## 4. Using a Table使用表
 在数据库传递数据，还有啥能比使用表更好的办法呢？使用表可没有上述在使用函数时的那些条条框框限制。使用表主要有两种方法：1）共享一个本地临时表。2）使用一个process-keyed table。前者更为轻量，但它有一个维护性问题——它不固定的字段；而后者通过使用一个固定的表结构从而没有这个维护性问题。但是这两个方法存在再编译的问题，尤其是对于被调用频率非常高的存储过程，这一问题尤为严重。process-keyed table方法的问题严重性稍微低些。使用本地临时表也会带来本地缓存垃圾的风险。我会在下文中详述这些问题。
 ### 4.1 Sharing a Temp Table共享临时表
-##### 简述
+#### 简述
 这一方法本身非常简单：
 ```
 CREATE PROCEDURE inner_sp @par1 int,
@@ -187,7 +187,7 @@ CREATE PROCEDURE outer_sp AS
 go
 ```
 本例中，**outer\_sp**创建临时表，**inner\_sp**往临时表写入数据，这是临时表作为输出的应用场景。另一个场景是，**outer\_sp**往临时表写入数据，然后**inner\_sp**对数据进行一些通用的计算处理，调用者**outer\_sp**再使用处理过后的数据再进行其他操作。这一场景就是将临时表同时用作输入与输出。还有一种就是调用者在临时表中写入数据，被调用者对数据进行一系列业务逻辑验证，然后再对数据进行更新。这就是临时表作为输入时的场景。
-##### 改动现有代码
+#### 改动现有代码
 假设你有如下存储过程:
 ```
 CREATE PROCEDURE SalesByStore @storeid varchar(30) AS
@@ -251,12 +251,12 @@ go
 ```
 我将创建临时表从封装sp挪到了子过程，子过程检测临时表是否存在，不存在的话会创建临时表。外层sp中有一个EXEC语句，并给**@wantresultset**传参"1"去获取数据。如果不传此参数，则它默认为0，调用**BigSalesByStore**则不受新的逻辑的影响。（因此，这里仍存在两处CREATE TABLE语句）
 
-##### 代码复用的优点
+#### 代码复用的优点
 在我们继续之前，我想说明上面的例子并不是一个好的实践。共享临时表方法本身并不是个坏的方法，而是说你需要根据场景有选择性地使用这个方法。就比如上面这个例子，你可能也意识到了，我们又创建临时表，又是创建新的存储过程，却只为解决一个如此简单的问题，可谓是杀鸡用牛刀。共享临时表的方法在代码量比较大的时候，就是一个非常好的方法了。上面例子只是为了为讲清楚方法而简化了场景。
 
 要记住，与C#和JAVA之类的语言相比，Transact-SQL的代码复用特性非常简陋，所以我们在尝试复用代码的时候的方法显得异常繁琐。因此，在T‑SQL中进行代码复用要特别注意使用场景。代码复用依然是有它的优势，只不过在T‑SQL中并不像现代面向对象语言那么明显。在本文例子的简单问题中，最好的解法显然是给**SalesByStore**加上一个参数@qty。如果出于一些原因不能加参数，那么复制一个**BigSalesByStore**存储过程也比共享临时表更好一些。
 
-##### 性能影响
+#### 性能影响
 你需要知道共享临时表存在两个性能方面的问题：一是它会产生相当数量的缓存垃圾，二是里层存储过程中与共享临时表相关的所有语句在每次执行时都会被重新编译。
 
 许多年来我已经成功让自己忽视了第一个问题，然而Alex Friedman却又让我重视起这一问题。在官方文档[Plan Caching in SQL Server 2008](https://technet.microsoft.com/en-us/library/ee343986)(虽然标题2008，但也适用后续版本)中是这么说的：
@@ -268,4 +268,85 @@ go
 
 **outer\_sp**每次被调用，**inner\_sp**都会生成共享临时表的新实例。没有任何能保证临时表的schema与上次一样，所以，SQL Server会重新编译**inner\_sp**中所以与共享临时表相关的语句。只要存储过程被调用的频率不是很高，重新编译就不是太需要考虑的问题，但是如果是高频调用的场景，这会导致CPU使用率升高的问题。
 
-如果**outer\_sp**被调用的非常频繁，但是session数量不大，你也不必使用WITH RECOMPILE去规避缓存垃圾的问题。
+如果**outer\_sp**被调用的非常频繁，但是session数量不太大，你也不必使用WITH RECOMPILE去规避缓存垃圾的问题。如果共享临时表的数据量不是很大，你可以用这个办法降低重新编译次数：将**inner\_sp**中的临时表在存储过程中静态定义(这也意味着你不能用SELECT INTO创建临时表)。在存储过程的开始和结束处读取或写入数据到临时表中。为保万无一失，我认为你应该在临时表有关的语句里使用OPTION (KEEPFIXED PLAN)命令，这样能防止因statistics变化而导致的临时表重新编译。
+#### 维护问题
+如果内层存储过程在多处被调用，这时你要想修改内层存储过程返回或写入的字段，那么你就得把所有调用它的存储过程中的临时表定义改一遍。因此，共享临时表通常用于调用与被调用存储过程一一的简单对应的场景。或者，你的临时表字段非常少，比如只有一个字段——客户IDs，通常不会轻易改动。
+
+有一些方法可以规避这个维护问题。一个方法是使用process-keyed table,我们将在下一小节详述。我从本文的读者也收到了不少很有趣的点子。
+
+其中一个点子来自Richard St-Aubin。调用方创建一个临时表，只有一个作为摆设的字段。然后再调用一个存储过程用ALTER TABLE去给临时表增加真正我们需要的字段。用例子说明就像这样：
+```
+CREATE PROCEDURE inner_sp @par1 int,
+                          @par2 bit,
+                          ... AS
+   ...
+   INSERT/UPDATE/DELETE #mytemp
+go
+CREATE PROCEDURE define_temp_table AS
+   ALTER TABLE #mytemp ADD col1 int     NOT NULL,
+                           col2 char(5) NULL,
+                           ...
+go
+CREATE PROCEDURE outer_sp AS
+   DECLARE ...
+   CREATE TABLE #mytemp (dummycol bit)
+   EXEC define_temp_table
+   ...
+   EXEC inner_sp @par1, @par2 ...
+   SELECT * FROM #mytemp
+go
+```
+你必须在**outer\_sp**中创建临时表，因为如果在**define\_temp\_table**中创建的话，那么临时表在**define\_temp\_table**结束的时候就将被删除了。这个方法的确值得考虑，但这个方法存在前文讨论过的字段引起的重新编译的问题。而且这个方法的临时表没有缓存。在高频调用的时候，这一点可能会明显地影响性能。
+
+另外一个方法来自Wayne Bloss。这个方法要求SQL 2008或以上版本。它创建了一个table type，存入了临时表的字段定义。你可能只用table type来声明表变量和表参数，Wayne会这么用：
+```
+DECLARE @dummy my_table_type
+SELECT * INTO #mytemp FROM @dummy
+```
+之后你只和**#mytemp**交互；**@dummy**的唯一作用为临时表**#mytemp**准备了一个预定义(如果你不熟悉table types,我们会在下文的table-valued parameters章节进行详细讨论)。这个方法的一大局限性是，你只能定义字段，而不能保留constraints，因为constraints并不会随着SELECT INTO复制到临时表。你可能会想，很少会给临时表加constraints吧。但我发现，给临时表加constraints非常有用，它帮助SQL去判断预估临时表的数据。这当然不止适用于存储过程间共享的临时表。给你的临时表加上主键，也有助于临时表在join时的性能。
+
+在本小节最后，我想指出这种共享临时表的方法非常灵活。被调用的存储过程只管读写字段，调用方可根据它的需要在创建临时表的时候增加字段。因而，两个存储过程调用同一个存储过程的时候可以分别用不同定义的临时表，只要被调用的存储过程用到的字段有定义即可。
+#### 关于SQL Server数据工具
+SQL Server数据工具，简称SSDT，有诸多用处，能给你带来许多便利。比如如果你想了一个存储过程：
+```
+CREATE PROCEDURE example_sp AS
+   CREATE TABLE #temp(a int NOT NULL)
+   SELECT a FROM #temmp
+```
+SSDT会在你执行语句之前就能告诉你临时表的名字拼写错了。这个特性非常有用，能帮助你提早发现错误。但是SSDT不认识共享临时表，所有SSDT会对**SalesByStore\_core**这样存储过程报警告，准确说会报三个警告，每一个字段一个。虽然只是警告，代码可以继续运行，但是存储过程数量稍微多一些，这些警告填满错误列表窗口，有可能使你漏掉了真正重要的警告或者问题提示。
+
+有一个办法可以屏蔽警告：右键点击Solution Explorer中的文件，选择属性。有一个属性叫*Suppress T‑Sql Warning*，输入要屏蔽的错误的代码。但是这样做会使得SSDT不去检查存储过程中的所有表名称。没有办法只针对共享临时表进行设置。
+
+言而总之，如果你使用SSDT，你会发现SSDT对共享临时表并不友好。
+### 4.2 Process-Keyed Tables
+这个方法使用普通表，从而规避了缓存垃圾问题和维护问题。但重新编译的问题仍旧存在，只是它的本质是不一样的。
+#### 梗概
+Process-Keyed Table指的是那些被用作临时表的普通表。为了让多个进程同时使用表，表中有一个特别的字段来标识进程。最简单的方法就是全局变量**@@spid**（**@@spid**是SQL Server的进程id）。这个方法其实非常常用，所以Process-Keyed Table又被称为*spid-keyed tables*。这里是简例，后文我将会再举一个更为完整的例子。
+```
+CREATE TABLE process_keyed (spid  int     NOT NULL,
+                            col1  int     NOT NULL,
+                            col2  char(5) NULL,
+                            ...)
+go
+CREATE CLUSTERED INDEX processkey_ix ON process_keyed (spid)
+-- Add other columns as needed.
+go
+...
+DELETE process_keyed WHERE spid = @@spid
+INSERT process_keyed (spid, col1, col2, ....)
+   VALUES (@@spid, @val1, @val2, ...)
+...
+SELECT col1, col2, ...
+FROM   process_keyed
+WHERE  spid = @@spid
+...
+DELETE process_keyed WHERE spid = @@spid
+```
+一些需要注意的：
+1. 表应该给进程字段（比如本例中的**spid**）加上聚集索引，所有与表相关的查询均包括查询条件`WHERE spid = @@spid`。
+2. 对于某个**@@spid**，在你给表插入数据之前，删除所有这个**s@@spid**下的数据，以保证安全。
+3. 使用完的数据应立刻删除，以免数据占据存储空间。
+#### 选择进程键
+虽然通常会使用**@@spid**作为表中的进程字段，但是这存在两个问题：
+1. 一旦哪个粗心的程序员忘了在使用前后删除数据，老数据可能会被存储过程读取，从而会导致错误的结果。而且这个错误难以被发现。
+2. 一个客户端传参**@@spid**，但并不能保证它每次传的都是同一个**@@spid**。
