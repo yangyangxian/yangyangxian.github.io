@@ -346,7 +346,24 @@ DELETE process_keyed WHERE spid = @@spid
 1. 表应该给进程字段（比如本例中的**spid**）加上聚集索引，所有与表相关的查询均包括查询条件`WHERE spid = @@spid`。
 2. 对于某个@@**spid**，在你给表插入数据之前，删除所有这个@@**spid**下的数据，以保证安全。
 3. 使用完的数据应立刻删除，以免数据占据存储空间。
-#### 选择进程键
+#### 选择进程主键
 虽然通常会使用@@**spid**作为表中的进程字段，但是这存在两个问题：
 1. 一旦哪个粗心的程序员忘了在使用前后删除数据，老数据可能会被存储过程读取，从而会导致错误的结果。而且这个错误难以被发现。
 2. 一个客户端传参@@**spid**，但并不能保证它每次传的都是同一个@@**spid**。
+一个替代方案是使用GUID(数据类型**uniqueidentifier**)。如果你在SQL server中创建进程主键，那么你可以用函数newid()(你可以用newid()获取一个唯一值，这解决了上述的第一个问题)。你可能听说过，聚集索引不要使用GUID的说法，然而这个说法只适用你的guid是主键的情形，因为这会带来分页和碎片化的问题。但在一个Process-Keyed Table中就不同了，一个guid必然对应着许多行记录。而且关键是使用GUID相较使用@@**spid**而言并不会带来更多的分页。
+
+另外一个生成进程主键的方法是使用使用语句CREATE SEQUENCE创建序列(sequence)对象，例如：
+```
+CREATE SEQUENCE MySequence AS int
+```
+然后你可以使用NEXT VALUE FOR从序列获取值：
+```
+DECLARE @processkey int = NEXT VALUE FOR MySequence
+INSERT tbl (processkey, col1, col2, ...)
+   SELECT @processkey, col1, col2
+   FROM   ...
+```
+你需要使用使用这个变量，序列会为每一行生成不同的值。（序列的一个典型用途是代理键，与IDENTITY自增类似）
+**注意**：序列是SQL2012及以后版本的特性。
+#### 一个更长的例子
+现假设有一个应用中有多处地方需要计算一个或多个商店的书籍销售总量。计算逻辑放在存储过程**ComputeTotalStoreQty**中，存储过程读写的表为**stores_aid**。在这个例子中，存储过程包含一个UPDATE语句，计算每个商店的书籍数量。真实案例中的计算逻辑肯定更为复杂，可能有数百行的代码。还有一个存储过程**TotalStoreQty**，对于给定的状态它返回总销量。
