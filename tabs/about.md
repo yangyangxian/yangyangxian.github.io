@@ -12,3 +12,23 @@ header-img: "img/green.jpg"
 - [微博@杨洋的围脖啊](http://weibo.com/2003457565)
 - [知乎@杨洋](http://www.zhihu.com/people/yang-yang-8)
 - [Steam@眉毛有点浓](http://steamcommunity.com/id/yangyoungyang/)
+
+## PC Setup
+### Productivity Softwares and Tools
+- [Nodejs](https://nodejs.org/en/)
+- [VSCode](https://code.visualstudio.com/)
+- [Github Desktop](https://desktop.github.com/)
+- [Git](https://git-scm.com/)
+### Hardware
+CPU: i5-6500\
+CPU FAN: PHANTEKS\
+RAM: Corsair 8GB\
+Motherboard: ASUS B150M\
+GPU: ASUS GTX1060\
+SSD: SAMSUNG 850EVO\
+Power: SuperFlower 450W Gold\
+Case: JONSBO RM3\
+Monitor: DELL U2515
+
+
+
