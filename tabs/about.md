@@ -5,7 +5,7 @@ description: "Here lies one whose name is written in 胡辣汤"
 header-img: "img/green.jpg"
 ---
 ## 简介
-大学读过物理，生物，做过科研，现为web开发程序员。   
+大学读过物理；硕士学习生物，现为Web程序开发者。   
 曾喜欢读历史，政治；现偶尔玩摄影，踢足球，常玩电子游戏。
 
 ## 联系
@@ -20,14 +20,14 @@ header-img: "img/green.jpg"
 - [Github Desktop](https://desktop.github.com/)
 - [Git](https://git-scm.com/)
 ### Hardware
-CPU: i5-6500\
-CPU FAN: PHANTEKS\
-RAM: Corsair 8GB\
-Motherboard: ASUS B150M\
-GPU: ASUS GTX1060\
-SSD: SAMSUNG 850EVO\
-Power: SuperFlower 450W Gold\
-Case: JONSBO RM3\
+CPU: i5-6500    
+CPU FAN: PHANTEKS   
+RAM: Corsair 8GB    
+Motherboard: ASUS B150M     
+GPU: ASUS GTX1060   
+SSD: SAMSUNG 850EVO     
+Power: SuperFlower 450W Gold       
+Case: JONSBO RM3    
 Monitor: DELL U2515
 
 
