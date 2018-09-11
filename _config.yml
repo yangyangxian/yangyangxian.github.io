@@ -2,11 +2,11 @@ title: John Smith
 description: My Personal Blog
 author: John Smith
 logo: /hcz-jekyll-blog/static/img/avatar.png
-github: https://github.com/codeasashu
+github: https://github.com/yangyangxian
 about: Freelance developer
 
-baseurl: "https://codeasashu.github.io/hcz-jekyll-blog"
-url: "https://codeasashu.github.io/hcz-jekyll-blog"
+baseurl: "https://github.com/yangyangxian/yangyangxian.github.io"
+url: "https://github.com/yangyangxian/yangyangxian.github.io"
 
 allowsearch: true
 
